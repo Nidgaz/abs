@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Input, Button, DatePicker, Select, Checkbox, Modal, Table, Divider } from 'antd';
+import { Form, Row, Col, Input, Button, DatePicker, Select, Modal, Table, Divider } from 'antd';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import './styles.css';
+import {debounce} from 'lodash';
 
 const { Option } = Select;
 
@@ -11,38 +12,38 @@ const offers = [
   'BG CBDol',
   'BG Bracelet Starry Sky',
   'BG Combidress',
-  'RO Starry Sky Watch',
+  'RO Starryy Sky Watch',
   'RO XTactical Watch',
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
+  'BG 10Bard Watch',
+  'BG CBDolf',
+  'BG Braceletr Starry Sky',
+  'BG Combidressg',
   'RO Starry Sky Watch',
-  'RO XTactical Watch',
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
-  'RO Starry Sky Watch',
-  'RO XTactical Watch',
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
-  'RO Starry Sky Watch',
-  'RO XTactical Watch',
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
-  'RO Starry Sky Watch',
-  'RO XTactical Watch',
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
-  'RO Starry Sky Watch',
-  'RO XTactical Watch',
+  'RO XTacticall Watch',
+  'BG 10Barv Watch',
+  'BG CBDol4',
+  'BG Bracelett Starry Sky',
+  'BG Combidresse',
+  'RO Starryd Sky Watch',
+  'RO XTacticaly Watch',
+  'BG 10Bars Watch',
+  'BG CBDol7',
+  'BG Braceleto Starry Sky',
+  'BG Combidressa',
+  'RO Starryd Sky Watch',
+  'RO XTacticalz Watch',
+  'BG 10Bar5 Watch',
+  'BG CBDolh',
+  'BG Braceletdf Starry Sky',
+  'BG Combidresss',
+  'RO Starrya Sky Watch',
+  'RO XTacticalx Watch',
+  'BG 10Barz Watch',
+  'BG CBDolk',
+  'BG Braceletf Starry Sky',
+  'BG Combidressm',
+  'RO Starryl Sky Watch',
+  'RO XTacticalp Watch',
 ];
 
 export const Filters = ({onLoad}) => {
@@ -50,7 +51,6 @@ export const Filters = ({onLoad}) => {
   const [form] = Form.useForm();
 
   const onFinish = (values: any) => {
-    console.log('Received values of form: ', values);
     onLoad(true);
     setTimeout(() => {
       onLoad(false);
@@ -224,7 +224,7 @@ const Row2 = () => ([
   </Col>,
   <Col span={4} >
       <Form.Item
-        name={`currencyType`}
+        name={`user`}
         label={`Mon, Sup, S.OP:`}
       >
         <Input placeholder='N/A'/>
@@ -299,13 +299,18 @@ const Geo = () => {
 
 const Offers = ({loadOffer}) => {
   const [visible, setVisible] = useState(false);
+  const [values, setValues] = useState([]);
 
   const onSelect = value => {
-
+    setValues(value);
   }
 
   const onOpen = value => {
     setVisible(true);
+  }
+
+  const onClear = () => {
+    setValues([]);
   }
 
   return (
@@ -314,13 +319,15 @@ const Offers = ({loadOffer}) => {
       allowClear
       placeholder="Please select"
       maxTagCount="responsive"
-      // onChange={onSelect}
-      listHeight={500}
+      listHeight={0}
       loading={loadOffer}
       onDropdownVisibleChange={onOpen}
+      value={values.map(el => el.name)}
+      onClear={onClear}
+      dropdownStyle={{display: 'none'}}
       dropdownRender={child => {
         return(
-          <SelectModal visible={visible} setVisible={setVisible}/>
+          <SelectModal visible={visible} setVisible={setVisible} onSelect={onSelect} values={values}/>
         )
       }}
     >
@@ -347,35 +354,61 @@ const data = offers.map((el, index) => (
   )
 );
 
+const replaceWord = (str,index,tag) => {
+  return str.substr(0,index)+str.substr(index).replace(/\w+/,"<"+tag+">$&</"+tag+">");
+}
 
-
-const SelectModal = ({clid, visible, setVisible}) => {
+const SelectModal = ({visible, setVisible, onSelect, values}) => {
 
   const [tableData, filterTableData] = useState(data);
   const [search, setSearch] = useState(false);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([])
+  const [selectedRowKeys, setSelectedRowKeys] = useState(values.map(el => el.key));
 
+  useEffect(() => {
+    setSelectedRowKeys(values.map(el => el.key));
+  },[values]);
+
+  const [searchStatus, setSearchStatus] = useState(false);
   const rowSelection = {
     selectedRowKeys,
-    onChange: (selectedRowKeys, selectedRows) => {
-      setSelectedRowKeys(selectedRowKeys);
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+    onSelectAll: (selected, selectedRows) => {
+      setSelectedRowKeys(selected ? searchStatus ? selectedRows.map(el => el.key) : data.map(el => el.key) : []);
+    },
+    onSelect: (record, selected, selectedRows) => {
+      setSelectedRowKeys(selectedRows.map(el => el.key));
     }
   };
 
-  const onSearch = value => {
-    console.log(value);
+  const onSelectData = () => {
+    onSelect(selectedRowKeys.map(key => data.find(el => el.key === key)));
+    setVisible(false);
+  }
+
+  const onSearch = debounce(e => {
+    searchTableItem(e.target.value);
+  }, 500)
+
+  const searchTableItem = value => {
+    let _d = [];
+    if (value) {
+      setSearchStatus(true);
+      _d = data.filter( el => el.name.toLowerCase().indexOf(value) !== -1);
+    } else {
+      setSearchStatus(false);
+      _d = data;
+    }
+
+    filterTableData(_d);
   }
 
   return(
     <Modal
           title="Offer"
-          centered
           visible={visible}
-          onOk={() => setVisible(false)}
+          onOk={() => onSelectData()}
           onCancel={() => setVisible(false)}
         >
-          <Search 
+          <Search
             placeholder="Text to search" 
             loading={search}
             onChange={onSearch}
