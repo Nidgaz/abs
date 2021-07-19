@@ -3,6 +3,7 @@ import { Layout, Typography } from 'antd';
 import 'antd/dist/antd.css';
 import { Filters } from './components/filters';
 import { Tables } from './components/tables';
+import { Tables as Tables2 } from './components/tables2';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
@@ -23,6 +24,7 @@ function App() {
         <Filters onLoad={onLoad}/>
         <br />
         <Tables loadStatus={loadStatus}/>
+        <Tables2 />
       </div>
     </Content>
     <Footer style={{ textAlign: 'center' }}>Absolut</Footer>
