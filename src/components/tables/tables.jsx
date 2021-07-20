@@ -1,6 +1,8 @@
 import React from 'react';
 import moment from 'moment';
 import { Table, Spin } from 'antd';
+import { Resizable } from 'react-resizable';
+
 import './styles.css';
 
 const geo = [
@@ -15,18 +17,21 @@ const columns = [
     editable: true,
     defaultSortOrder: 'descend',
     sorter: (a, b) => a.date - b.date,
+    width: 80,
   },
   {
     title: 'Total',
     dataIndex: 'total',
     ellipsis: true,
     align: 'right',
+    width: 40,
   },
   {
     title: 'Valid',
     dataIndex: 'valid',
     ellipsis: true,
     align: 'right',
+    width: 40,
   },
   {
     title: 'Valid%',
@@ -34,18 +39,21 @@ const columns = [
     ellipsis: true,
     className: 'color_1',
     align: 'right',
+    width: 55,
   },
   {
     title: 'Unproc',
     dataIndex: 'unproc',
     ellipsis: true,
     align: 'right',
+    width: 60,
   },
   {
     title: 'App hour',
     dataIndex: 'appHour',
     ellipsis: true,
     align: 'right',
+    width: 70,
   },
   {
     title: 'Unproc%',
@@ -53,6 +61,7 @@ const columns = [
     ellipsis: true,
     className: 'color_1',
     align: 'right',
+    width: 70,
   },
   {
     title: 'Proc.',
@@ -60,6 +69,7 @@ const columns = [
     ellipsis: true,
     className: 'color_2',
     align: 'right',
+    width: 45,
   },
   {
     title: 'Drt. app.',
@@ -67,6 +77,7 @@ const columns = [
     ellipsis: true,
     className: 'color_2',
     align: 'right',
+    width: 70,
   },
   {
     title: 'Cln App',
@@ -74,6 +85,7 @@ const columns = [
     ellipsis: true,
     className: 'color_3',
     align: 'right',
+    width: 60,
   },
   {
     title: 'Work App.%',
@@ -81,6 +93,7 @@ const columns = [
     ellipsis: true,
     className: 'color_1',
     align: 'right',
+    width: 90,
   },
   {
     title: 'Plan Avg. check',
@@ -88,6 +101,7 @@ const columns = [
     ellipsis: true,
     className: 'text_bold',
     align: 'right',
+    width: 115,
   },
   {
     title: 'Ups',
@@ -95,24 +109,28 @@ const columns = [
     ellipsis: true,
     className: 'color_1',
     align: 'right',
+    width: 40,
   },
   {
     title: 'Ups%',
     dataIndex: 'upsP',
     ellipsis: true,
     align: 'right',
+    width: 50,
   },
   {
     title: 'Cross',
     dataIndex: 'cross',
     ellipsis: true,
     align: 'right',
+    width: 50,
   },
   {
     title: 'Cross%',
     dataIndex: 'crossP',
     ellipsis: true,
     align: 'right',
+    width: 60,
   },
   {
     title: 'Rej.',
@@ -120,6 +138,7 @@ const columns = [
     ellipsis: true,
     className: 'color_4',
     align: 'right',
+    width: 38,
   },
   {
     title: 'Rej%',
@@ -127,6 +146,7 @@ const columns = [
     ellipsis: true,
     className: 'color_4',
     align: 'right',
+    width: 45,
   },
   {
     title: 'Decl',
@@ -134,6 +154,7 @@ const columns = [
     ellipsis: true,
     className: 'color_5',
     align: 'right',
+    width: 40,
   },
   {
     title: 'Decl%',
@@ -141,30 +162,35 @@ const columns = [
     ellipsis: true,
     className: 'color_5',
     align: 'right',
+    width: 55,
   },
   {
     title: 'Decl_dbl',
     dataIndex: 'declDbl',
     ellipsis: true,
     align: 'right',
+    width: 70,
   },
   {
     title: 'Decl_dbl%',
     dataIndex: 'declDblP',
     ellipsis: true,
     align: 'right',
+    width: 80,
   },
   {
     title: 'Num of connected',
     dataIndex: 'numOfConnected',
     ellipsis: true,
     align: 'right',
+    width: 130,
   },
   {
     title: 'Connected',
     dataIndex: 'connected',
     ellipsis: true,
     align: 'right',
+    width: 85,
   },
 ];
 
@@ -255,17 +281,77 @@ for (let i = 0; i < 9; i++) {
   });
 }
 
+const ResizableTitle = props => {
+    const { onResize, width, ...restProps } = props;
+  
+    if (!width) {
+      return <th {...restProps} />;
+    }
+  
+    return (
+      <Resizable
+        width={width}
+        height={0}
+        handle={
+          <span
+            className="react-resizable-handle"
+            onClick={e => {
+              e.stopPropagation();
+            }}
+          />
+        }
+        onResize={onResize}
+        draggableOpts={{ enableUserSelectHack: false }}
+      >
+        <th {...restProps} />
+      </Resizable>
+    );
+  };
 export class Tables extends React.Component {
   state = {
-    selectedRowKeys: [], // Check here to configure the default column
+    selectedRowKeys: [],
+    columns: columns,
+    width: 1600,
+  };
+
+  components = {
+    header: {
+      cell: ResizableTitle,
+    },
   };
 
   onSelectChange = selectedRowKeys => {
-    console.log('selectedRowKeys changed: ', selectedRowKeys);
     this.setState({ selectedRowKeys });
   };
 
+
+  handleResize = index => (e, { size }) => {
+    this.setState(({ columns }) => {
+      const nextColumns = [...columns];
+      nextColumns[index] = {
+        ...nextColumns[index],
+        width: size.width,
+      };
+      return { columns: nextColumns };
+    });
+  };
+
   render() {
+
+    let width = 70;
+
+    const columns = this.state.columns.map((col, index) => {
+        width = width + col.width;
+        return ({
+            ...col,
+            onHeaderCell: column => ({
+            width: column.width,
+            onResize: this.handleResize(index),
+            }),
+      })
+    });
+
+
     const { selectedRowKeys } = this.state;
     const rowSelection = {
       selectedRowKeys,
@@ -304,9 +390,20 @@ export class Tables extends React.Component {
         },
       ],
     };
-    return (
+
+    const tableData = data.filter( el => {
+        if (this.props?.filters?.geo?.length) {
+            console.log(this.props?.filters?.geo);
+            return this.props?.filters?.geo.includes(el.date);
+        } else {
+            return true;
+
+        }
+    });
+
+    return (        
             <Spin size="large" spinning={this.props.loadStatus}>
-                <Table rowSelection={rowSelection} columns={columns} dataSource={data} scroll={{ y: 600, x: 1000 }} pagination={false} bordered size="small" tableLayout='auto'/>
+                <Table components={this.components} rowSelection={rowSelection} columns={columns} dataSource={tableData} scroll={{ y: 800, x: width }} pagination={false} bordered size="small" tableLayout='auto'/>
             </Spin>
     )
   }

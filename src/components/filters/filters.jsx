@@ -1,11 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Input, Button, DatePicker, Select, Modal, Table, Divider } from 'antd';
-import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Form, Row, Col, Input, Button, DatePicker, Select, Modal, Table, Divider, Dropdown, Menu, Checkbox, Badge } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import './styles.css';
-import {debounce} from 'lodash';
+import { debounce } from 'lodash';
 
 const { Option } = Select;
+
+// Date Pick
+const { RangePicker } = DatePicker;
+
+const dateFormat = 'DD.MM.YYYY';
+
+const DateFilter = () => (
+    <RangePicker
+      defaultValue={[moment('12.07.2021', dateFormat), moment('12.07.2021', dateFormat)]}
+      format={dateFormat}
+    />
+);
+
+// filter fields
+const fields = [
+  {
+    name: 'date',
+    label: 'Date',
+    show: true,
+    component: () => <DateFilter />,
+  },
+  {
+    name: 'geo',
+    label: 'Geo',
+    show: true,
+    component: props => (<Geo {...props}/>),
+  },
+  {
+    name: 'offer',
+    label: 'Offer',
+    show: true,
+    component: () => <Offers />,
+  },
+  {
+    name: 'productSubType',
+    label: 'Product sub type',
+    show: true,
+    component: () => (
+      <Select defaultValue="N/A">
+        <Option value="jack">N/A</Option>
+        <Option value="jack">Physics</Option>
+        <Option value="lucy">Internal</Option>
+      </Select>
+    ),
+  },
+  {
+    name: 'currencyType',
+    label: 'Currency type',
+    show: true,
+    component: () => (
+      <Select defaultValue="Local Currency" allowClear>
+                <Option value="jack">Local Currency</Option>
+                <Option value="lucy">Euro</Option>
+              </Select>
+    ),
+  },
+  {
+    name: 'leadType',
+    label: 'Lead type',
+    show: false,
+    component: () => (
+      <Select defaultValue="ALL" allowClear>
+        <Option value="jack">ALL</Option>
+        <Option value="lucy">Common</Option>
+      </Select>
+    ),
+  },
+  {
+    name: 'office',
+    label: 'Office',
+    show: false,
+    component: () => (
+      <Select defaultValue="N/A" allowClear>
+          <Option value="jack">Bogota</Option>
+          <Option value="lucy">Moscow</Option>
+        </Select>
+    ),
+  },
+  {
+    name: 'officeType',
+    label: 'Office type',
+    show: false,
+    component: () => (
+      <Select defaultValue="By Lead" allowClear>
+          <Option value="jack">By Lead</Option>
+          <Option value="lucy">By Operator</Option>
+        </Select>
+    ),
+  },
+  {
+    name: 'webmaster',
+    label: 'Webmaster',
+    show: false,
+    component: () => (
+      <Select defaultValue="All">
+        <Option value="jack">Buyer</Option>
+        <Option value="jack">External</Option>
+        <Option value="jack">All</Option>
+    </Select>
+    ),
+  },
+  
+  {
+    name: 'TimeZone',
+    label: 'Time zone',
+    show: false,
+    component: () => (
+      <Select defaultValue="Moscow time" allowClear>
+          <Option value="jack">Moscow time</Option>
+          <Option value="lucy">Geo time</Option>
+        </Select>
+    ),
+  },
+]
 
 const offers = [
   'BG 10Bar Watch',
@@ -46,15 +160,41 @@ const offers = [
   'RO XTacticalp Watch',
 ];
 
-export const Filters = ({onLoad}) => {
-  const [expand, setExpand] = useState(false);
-  const [form] = Form.useForm();
+const FieldsSelect = ({filterFields, toggleFields}) => {
+  const onChange = (e, indx) => {
+    toggleFields(e.target.checked, indx);
+  }
 
-  const onFinish = (values: any) => {
+  return(
+    <Menu>
+      {filterFields.map( (el, indx) => (
+        <Menu.Item>
+        <Checkbox onChange={e => onChange(e, indx)} checked={el.show}>{el.label}</Checkbox>
+      </Menu.Item>
+      ))}
+    </Menu>
+)};
+
+export const Filters = ({onLoad, setFilters}) => {
+  const [form] = Form.useForm();
+  const [filterState, setFilterState] = useState({});
+  const [filterFields, changeFields] = useState(fields);
+
+
+  const toggleFields = (status, indx) => {
+    console.log(status, indx);
+    changeFields(filterFields.map((el, i) => {
+      if (i === indx) el.show = status;
+      return el;
+    }))
+  }
+
+  const onFinish = () => {
     onLoad(true);
     setTimeout(() => {
+      setFilters(filterState);
       onLoad(false);
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -65,9 +205,18 @@ export const Filters = ({onLoad}) => {
       onFinish={onFinish}
       layout="vertical"
     >
-      <Row gutter={24}>
-        <Row1 />
-        {expand && <Row2/>}
+      <Row gutter={16}>
+        {filterFields.map(el => (
+          el.show && 
+          <Col span={5} >
+            <Form.Item
+              name={el.name}
+              label={el.label}
+            >
+              {el.component({setFilterState})}
+            </Form.Item>
+        </Col>
+        ))}
       </Row>
       <Row>
         <Col span={24} style={{ textAlign: 'right' }}>
@@ -82,14 +231,13 @@ export const Filters = ({onLoad}) => {
           >
             Reset view settings
           </Button>
-          <a
-            style={{ fontSize: 12 }}
-            onClick={() => {
-              setExpand(!expand);
-            }}
-          >
-            {expand ? <UpOutlined /> : <DownOutlined />} Collapse
-          </a>
+          <Dropdown overlay={() => <FieldsSelect toggleFields={toggleFields} filterFields={filterFields}/>} arrow={true}>
+          <Badge count={filterFields.filter(el=>!el.show).length}>
+            <Button>
+              Show fields <DownOutlined/>
+            </Button>
+            </Badge>
+          </Dropdown>
         </Col>
       </Row>
     </Form>
@@ -97,185 +245,18 @@ export const Filters = ({onLoad}) => {
 };
 
 
-// row 1 
-
-const Row1 = () => {
-  const [loadOffer, onLoadOffer] = useState(true);
-
-  useEffect(() =>{
-    setTimeout(() => {
-      onLoadOffer(false);
-    }, 1000)
-  }, [])
-
-  return ([
-        <Col span={4} >
-            <Form.Item
-              name={`date`}
-              label={`Date:`}
-            >
-              <DateFilter/>
-            </Form.Item>
-        </Col>,
-        <Col span={4} >
-            <Form.Item
-              name={`geo`}
-              label={`Geo:`}
-            >
-              <Geo />
-            </Form.Item>
-        </Col>,
-        <Col span={4} >
-            <Form.Item
-              name={`offer`}
-              label={`Offer:`}
-            >
-             <Offers />
-            </Form.Item>
-        </Col>,
-        <Col span={4} >
-            <Form.Item
-              name={`productSubType`}
-              label={`Product sub type:`}
-            >
-              <Select defaultValue="N/A">
-                <Option value="jack">N/A</Option>
-                <Option value="jack">Physics</Option>
-                <Option value="lucy">Internal</Option>
-              </Select>
-            </Form.Item>
-        </Col>,
-        <Col span={4} >
-            <Form.Item
-              name={`currencyType`}
-              label={`Currency type:`}
-            >
-              <Select defaultValue="Local Currency" allowClear>
-                <Option value="jack">Local Currency</Option>
-                <Option value="lucy">Euro</Option>
-              </Select>
-            </Form.Item>
-        </Col>,
-        <Col span={4} >
-            <Form.Item
-              name={`leadType`}
-              label={`Lead type:`}
-            >
-              <Select defaultValue="ALL" allowClear>
-                <Option value="jack">ALL</Option>
-                <Option value="lucy">Common</Option>
-              </Select>
-            </Form.Item>
-        </Col>
-])
-};
-
-// row2 
-
-const Row2 = () => ([
-  <Col span={4} >
-      <Form.Item
-        name={`office`}
-        label={`Office:`}
-      >
-        <Select defaultValue="N/A" allowClear>
-          <Option value="jack">Bogota</Option>
-          <Option value="lucy">Moscow</Option>
-        </Select>
-      </Form.Item>
-  </Col>,
-  <Col span={4} >
-      <Form.Item
-        name={`fficeType`}
-        label={`Office type:`}
-      >
-        <Select defaultValue="By Lead" allowClear>
-          <Option value="jack">By Lead</Option>
-          <Option value="lucy">By Operator</Option>
-        </Select>
-      </Form.Item>
-  </Col>,
-  <Col span={4} >
-      <Form.Item
-        name={`webmaster`}
-        label={`Webmaster:`}
-      >
-        <Select
-          mode="multiple"
-          allowClear
-          placeholder="Please select"
-          maxTagCount="responsive"
-        >
-          {offers.map( el => <Option key={el}>{el}</Option>)}
-        </Select>
-      </Form.Item>
-  </Col>,
-  <Col span={4} >
-      <Form.Item
-        name={`webmasterType`}
-        label={`Webmaster type:`}
-      >
-        <Select defaultValue="All">
-          <Option value="jack">Buyer</Option>
-          <Option value="jack">External</Option>
-          <Option value="jack">All</Option>
-        </Select>
-      </Form.Item>
-  </Col>,
-  <Col span={4} >
-      <Form.Item
-        name={`user`}
-        label={`Mon, Sup, S.OP:`}
-      >
-        <Input placeholder='N/A'/>
-      </Form.Item>
-  </Col>,
-  <Col span={4} >
-      <Form.Item
-        name={`TimeZone`}
-        label={`Time zone:`}
-      >
-        <Select defaultValue="Moscow time" allowClear>
-          <Option value="jack">Moscow time</Option>
-          <Option value="lucy">Geo time</Option>
-        </Select>
-      </Form.Item>
-  </Col>
-]);
-
-
-// Date Pick
-const { RangePicker } = DatePicker;
-
-function onChange(dates, dateStrings) {
-  console.log('From: ', dates[0], ', to: ', dates[1]);
-  console.log('From: ', dateStrings[0], ', to: ', dateStrings[1]);
-}
-
-const dateFormat = 'DD.MM.YYYY';
-
-
-const DateFilter = () => (
-    <RangePicker
-      defaultValue={[moment('12.07.2021', dateFormat), moment('12.07.2021', dateFormat)]}
-      format={dateFormat}
-    />
-);
-
-
 const geo = [
   'AR', 'BG', 'CK', 'TR', 'MX', 'RO', 'PT', 'ID', 'GN'
 ];
 
-const Geo = () => {
+const Geo = ({setFilterState}) => {
   const [defaultValue, setDefaultValue] = useState([]);
 
   const onSelect = (value) => {
-    if (value.includes('all')) {
-      setDefaultValue(geo);
-    } else {
-      setDefaultValue(value);
-    }
+    const _value = value.includes('all') ? geo : value;
+
+    setDefaultValue(_value);
+    setFilterState({geo: _value})
   }
 
   return (<Select
