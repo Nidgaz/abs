@@ -1,16 +1,14 @@
-import { useState } from 'react';
+import React, { useState, FC } from 'react';
 import { Layout, Typography } from 'antd';
 import 'antd/dist/antd.css';
-import { Filters } from './components/filters';
-import { Tables } from './components/tables';
-// import { Tables as Tables2 } from './components/tables2';
-import './App.css';
+import { Filters } from '../components/filters';
+import { Tables } from '../components/tables';
 
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
 
-function App() {
+export const MainLayout: FC = () => {
   const [loadStatus, onLoad] = useState(false);
   const [filters, setFilters] = useState({});
 
@@ -25,12 +23,9 @@ function App() {
         <Filters onLoad={onLoad} setFilters={setFilters}/>
         <br />
         <Tables loadStatus={loadStatus} filters={filters}/>
-        {/* <Tables2 /> */}
       </div>
     </Content>
     <Footer style={{ textAlign: 'center' }}>Absolut</Footer>
   </Layout>
   );
 }
-
-export default App;

@@ -1,13 +1,35 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.ant-table.ant-table-small .ant-table-title, .ant-table.ant-table-small .ant-table-footer, .ant-table.ant-table-small .ant-table-thead > tr > th, .ant-table.ant-table-small .ant-table-tbody > tr > td, .ant-table.ant-table-small tfoot > tr > th, .ant-table.ant-table-small tfoot > tr > td {
+  padding: 3px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.text_bold {
+  font-weight: 600;
+}
+
+.color_1 {
+  color: Blue;
+}
+
+.color_2 {
+  color: green;
+}
+
+.color_3 {
+  color: orange;
+}
+
+.color_4 {
+  color: red;
+}
+
+.color_5 {
+  color: rebeccapurple;
+}
+
+.ant-table-row-level-0 {
+  background-color: #f0f2f5;
+}
+
+td.ant-table-column-sort {
+  background: transparent;
 }

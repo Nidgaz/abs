@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Input, Button, DatePicker, Select, Modal, Table, Divider, Dropdown, Menu, Checkbox, Badge } from 'antd';
+import { useState, useEffect } from 'react';
+import * as _ from 'lodash';
+import { Form, Row, Col, Input, Button, Select, Modal, Table, Divider, Dropdown, Menu, Checkbox, Badge } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import moment from 'moment';
+
+import { geo, offers } from '../../state/makeData';
+import { DateFilter } from '../dateFilter';
+
 import './styles.css';
-import { debounce } from 'lodash';
 
-const { Option } = Select;
+const { Option }: any = Select;
 
-// Date Pick
-const { RangePicker } = DatePicker;
+// выбор фильтров
+type Field = {
+  name: string;
+  label: string;
+  show: boolean;
+  component: (...props: any) => JSX.Element;
+}
 
-const dateFormat = 'DD.MM.YYYY';
-
-const DateFilter = () => (
-    <RangePicker
-      defaultValue={[moment('12.07.2021', dateFormat), moment('12.07.2021', dateFormat)]}
-      format={dateFormat}
-    />
-);
-
-// filter fields
-const fields = [
+const fields: Field[] = [
   {
     name: 'date',
     label: 'Date',
@@ -31,7 +29,7 @@ const fields = [
     name: 'geo',
     label: 'Geo',
     show: true,
-    component: props => (<Geo {...props}/>),
+    component: props => <Geo {...props}/>,
   },
   {
     name: 'offer',
@@ -121,68 +119,25 @@ const fields = [
   },
 ]
 
-const offers = [
-  'BG 10Bar Watch',
-  'BG CBDol',
-  'BG Bracelet Starry Sky',
-  'BG Combidress',
-  'RO Starryy Sky Watch',
-  'RO XTactical Watch',
-  'BG 10Bard Watch',
-  'BG CBDolf',
-  'BG Braceletr Starry Sky',
-  'BG Combidressg',
-  'RO Starry Sky Watch',
-  'RO XTacticall Watch',
-  'BG 10Barv Watch',
-  'BG CBDol4',
-  'BG Bracelett Starry Sky',
-  'BG Combidresse',
-  'RO Starryd Sky Watch',
-  'RO XTacticaly Watch',
-  'BG 10Bars Watch',
-  'BG CBDol7',
-  'BG Braceleto Starry Sky',
-  'BG Combidressa',
-  'RO Starryd Sky Watch',
-  'RO XTacticalz Watch',
-  'BG 10Bar5 Watch',
-  'BG CBDolh',
-  'BG Braceletdf Starry Sky',
-  'BG Combidresss',
-  'RO Starrya Sky Watch',
-  'RO XTacticalx Watch',
-  'BG 10Barz Watch',
-  'BG CBDolk',
-  'BG Braceletf Starry Sky',
-  'BG Combidressm',
-  'RO Starryl Sky Watch',
-  'RO XTacticalp Watch',
-];
-
-const FieldsSelect = ({filterFields, toggleFields}) => {
-  const onChange = (e, indx) => {
-    toggleFields(e.target.checked, indx);
-  }
-
+const FieldsSelect = ({filterFields, toggleFields}: {filterFields: Field[], toggleFields: (status: boolean, indx: number) => void}) => {
   return(
+  
     <Menu>
       {filterFields.map( (el, indx) => (
         <Menu.Item>
-        <Checkbox onChange={e => onChange(e, indx)} checked={el.show}>{el.label}</Checkbox>
+        <Checkbox onChange={e => toggleFields(e.target.checked, indx)} checked={el.show}>{el.label}</Checkbox>
       </Menu.Item>
       ))}
     </Menu>
 )};
 
-export const Filters = ({onLoad, setFilters}) => {
+export const Filters = ({onLoad, setFilters}: {onLoad: any, setFilters: any}) => {
   const [form] = Form.useForm();
   const [filterState, setFilterState] = useState({});
   const [filterFields, changeFields] = useState(fields);
 
 
-  const toggleFields = (status, indx) => {
-    console.log(status, indx);
+  const toggleFields = (status: boolean, indx: number) => {
     changeFields(filterFields.map((el, i) => {
       if (i === indx) el.show = status;
       return el;
@@ -242,18 +197,14 @@ export const Filters = ({onLoad, setFilters}) => {
       </Row>
     </Form>
   );
-};
+}; 
 
-
-const geo = [
-  'AR', 'BG', 'CK', 'TR', 'MX', 'RO', 'PT', 'ID', 'GN'
-];
-
-const Geo = ({setFilterState}) => {
+// выбор гео
+const Geo = ({setFilterState} : {setFilterState: any}) => {
   const [defaultValue, setDefaultValue] = useState([]);
 
-  const onSelect = (value) => {
-    const _value = value.includes('all') ? geo : value;
+  const onSelect = (value: string[] ) => {
+    const _value: any = value.includes('all') ? geo : value;
 
     setDefaultValue(_value);
     setFilterState({geo: _value})
@@ -277,16 +228,16 @@ const Geo = ({setFilterState}) => {
   )
 }
 
-
-const Offers = ({loadOffer}) => {
+// выбор оффера
+const Offers = (): JSX.Element => {
   const [visible, setVisible] = useState(false);
   const [values, setValues] = useState([]);
 
-  const onSelect = value => {
+  const onSelect = (value: []) => {
     setValues(value);
   }
 
-  const onOpen = value => {
+  const onOpen = () => {
     setVisible(true);
   }
 
@@ -301,9 +252,8 @@ const Offers = ({loadOffer}) => {
       placeholder="Please select"
       maxTagCount="responsive"
       listHeight={0}
-      loading={loadOffer}
       onDropdownVisibleChange={onOpen}
-      value={values.map(el => el.name)}
+      value={values.map((el:OfferData) => el.name)}
       onClear={onClear}
       dropdownStyle={{display: 'none'}}
       dropdownRender={child => {
@@ -319,15 +269,24 @@ const Offers = ({loadOffer}) => {
 
 const { Search } = Input;
 
-const columns = [
+interface IOfferColumns {
+  title: string;
+  dataIndex: string;
+}
+
+const columns: Array<IOfferColumns> = [
   {
     title: 'Name',
     dataIndex: 'name',
-    align: 'left',
   },
 ]
 
-const data = offers.map((el, index) => (
+type OfferData = {
+  key: number;
+  name: string;
+}
+
+const data: OfferData[] = offers.map((el, index) => (
     {
       key: index,
       name: el,
@@ -335,11 +294,7 @@ const data = offers.map((el, index) => (
   )
 );
 
-const replaceWord = (str,index,tag) => {
-  return str.substr(0,index)+str.substr(index).replace(/\w+/,"<"+tag+">$&</"+tag+">");
-}
-
-const SelectModal = ({visible, setVisible, onSelect, values}) => {
+const SelectModal = ({visible, setVisible, onSelect, values}: {visible: boolean, setVisible: any, onSelect: any, values: OfferData[]}): JSX.Element => {
 
   const [tableData, filterTableData] = useState(data);
   const [search, setSearch] = useState(false);
@@ -352,10 +307,10 @@ const SelectModal = ({visible, setVisible, onSelect, values}) => {
   const [searchStatus, setSearchStatus] = useState(false);
   const rowSelection = {
     selectedRowKeys,
-    onSelectAll: (selected, selectedRows) => {
+    onSelectAll: (selected: boolean, selectedRows: OfferData[]) => {
       setSelectedRowKeys(selected ? searchStatus ? selectedRows.map(el => el.key) : data.map(el => el.key) : []);
     },
-    onSelect: (record, selected, selectedRows) => {
+    onSelect: (record: any, selected: boolean, selectedRows: OfferData[]) => {
       setSelectedRowKeys(selectedRows.map(el => el.key));
     }
   };
@@ -365,11 +320,11 @@ const SelectModal = ({visible, setVisible, onSelect, values}) => {
     setVisible(false);
   }
 
-  const onSearch = debounce(e => {
+  const onSearch = _.debounce(e => {
     searchTableItem(e.target.value);
   }, 500)
 
-  const searchTableItem = value => {
+  const searchTableItem = (value: string) => {
     let _d = [];
     if (value) {
       setSearchStatus(true);
@@ -406,3 +361,4 @@ const SelectModal = ({visible, setVisible, onSelect, values}) => {
         </Modal>
   )
 }
+
